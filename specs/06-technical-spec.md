@@ -96,7 +96,7 @@ Suggested fields:
 - `title` string, required;
 - `description` string, optional;
 - `projectId` string | null;
-- `responsibleName` string | null;
+- `responsibleName` string | null, defaulting to `Kike` for new task creation rows;
 - `priority` string, one of `high`, `medium`, `low`;
 - `isStarred` boolean, default `false`, used by the `Mi día` quick filter;
 - `statusId` string;
@@ -112,6 +112,7 @@ Behavior:
 
 - `projectId` is optional;
 - `responsibleName` is optional and free-text;
+- project selectors in the task table should reuse the same `Cliente - Proyecto` labeling convention as Diary when client data exists;
 - priority should remain visually encoded through color in both read and edit modes;
 - the star marker should remain clickable in read mode because it acts as a day-focus toggle, not as a full edit action;
 - due date should preserve urgency colors in the task table;

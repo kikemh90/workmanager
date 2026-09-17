@@ -231,6 +231,20 @@ Done when:
 - invalid files are rejected safely;
 - the UI refreshes immediately after a successful import.
 
+### Step 13 - Task catalog labeling defaults
+
+Deliverables:
+
+- task-table project header renamed to `Cliente - Proyecto`;
+- project option labels in task rows aligned with the diary `Cliente - Proyecto` format;
+- default responsible preset for new task creation rows.
+
+Done when:
+
+- task project selectors show client plus project text when applicable;
+- new task rows prefill `Kike` as the responsible value;
+- existing tasks preserve their current responsible values unchanged.
+
 ## 4. Suggested agent mapping
 
 - Orchestrator: selects the next step and checks entry/exit criteria;

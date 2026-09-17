@@ -26,6 +26,8 @@ Estado del producto:
 - filtro rapido "Mi dia" para mostrar solo tareas destacadas con estrella.
 - ordenacion visual priorizando automaticamente arriba las tareas marcadas con estrella.
 - exportacion e importacion JSON para migrar o respaldar los datos locales entre origenes del navegador.
+- selector de tarea `Cliente - Proyecto` alineado visualmente con Diario.
+- responsable por defecto `Kike` al crear nuevas tareas.
 
 ## Objetivo de producto
 
@@ -79,6 +81,7 @@ La aplicacion debe permitir:
 
 - **Dashboard**: KPIs compactos por prioridad, proyecto y vencimiento.
 - **Tareas**: tabla principal tipo Excel con filtros, ordenacion por cabeceras, modo edicion global, colores de prioridad y urgencia de vencimiento, ocultacion por defecto de tareas completadas y marcador de estrella para `Mi dia`.
+- **Tareas**: tabla principal tipo Excel con filtros, ordenacion por cabeceras, modo edicion global, columna `Cliente - Proyecto` coherente con Diario, responsable por defecto `Kike`, colores de prioridad y urgencia de vencimiento, ocultacion por defecto de tareas completadas y marcador de estrella para `Mi dia`.
 - **Gestor**: alta y mantenimiento de clientes y proyectos compartidos.
 - **Diario**: registro de conocimiento con selector de proyecto opcional, columna `Cliente - Proyecto`, filtro por proyecto y buscador en contenido, ademas de modal de alta rapida para nuevas entradas.
 - **Configuración**: mantenimiento del catalogo de estados de tarea.

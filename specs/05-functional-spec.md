@@ -123,8 +123,10 @@ Acceptance:
 - title is required;
 - project assignment is optional unless later decided otherwise;
 - when a project is assigned, it must be selected from the shared catalog created in Gestor;
+- project options in the task table should display `Cliente - Proyecto` when a client exists, matching the diary experience;
 - the task may exist without a project;
 - responsible person is optional and can be entered as a free-text name;
+- the default responsible value for a newly created task is `Kike`;
 - due date is optional;
 - priority is set on creation or defaults to a defined value;
 - task appears in the active task list after saving;
@@ -145,6 +147,7 @@ Acceptance:
 - the creation row is shown only while edit mode is active;
 - title and description are shown in separate columns;
 - visible dates on the table use the `dd/mm/yyyy` format.
+- the task table project column is titled `Cliente - Proyecto`.
 
 ### 4.4 Deleting records
 

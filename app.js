@@ -30,6 +30,7 @@ const APP_VIEWS = ["dashboard", "daily", "gestor", "diary", "config"];
 const TASK_VIEWS = ["all", "my-day", "today", "upcoming", "overdue"];
 const TASK_SORT_FIELDS = ["dueDate", "priority", "status"];
 const DEFAULT_REMINDER_DAYS = 5;
+const DEFAULT_TASK_RESPONSIBLE = "Kike";
 let diaryViewState = {
   projectId: "",
   searchText: ""
@@ -459,6 +460,15 @@ function getProjectClientLabel(projectId) {
   return clientName ? `${clientName} - ${project.name}` : project.name;
 }
 
+function getTaskProjectOptionLabel(project) {
+  if (!project) {
+    return "Sin proyecto";
+  }
+
+  const baseLabel = getProjectClientLabel(project.id);
+  return project.isActive ? baseLabel : `${baseLabel} (Archivado)`;
+}
+
 function getProjectById(projectId) {
   return cachedProjects.find((item) => item.id === projectId) || null;
 }
@@ -570,7 +580,7 @@ function getTaskReminderIso(task) {
 function buildTaskProjectOptions(selectedProjectId) {
   return ["<option value=\"\">Sin proyecto</option>"].concat(
     cachedProjects.map((project) => {
-      const label = project.isActive ? project.name : `${project.name} (Archivado)`;
+      const label = getTaskProjectOptionLabel(project);
       const selected = project.id === selectedProjectId ? " selected" : "";
       return `<option value="${escapeHtml(project.id)}"${selected}>${escapeHtml(label)}</option>`;
     })
@@ -891,7 +901,7 @@ function populateTaskSelects(selectedProjectId, selectedStatusId) {
   if (taskElements.taskProject) {
     const projectOptions = ["<option value=\"\">Sin proyecto</option>"].concat(
       getTaskFormProjects(selectedProjectId).map((project) => {
-        const label = project.isActive ? project.name : `${project.name} (Archivado)`;
+        const label = getTaskProjectOptionLabel(project);
         return `<option value="${escapeHtml(project.id)}">${escapeHtml(label)}</option>`;
       })
     );
@@ -923,7 +933,7 @@ function clearTaskForm() {
   if (taskElements.taskId) taskElements.taskId.value = "";
   if (taskElements.taskTitle) taskElements.taskTitle.value = "";
   if (taskElements.taskDescription) taskElements.taskDescription.value = "";
-  if (taskElements.taskResponsible) taskElements.taskResponsible.value = "";
+  if (taskElements.taskResponsible) taskElements.taskResponsible.value = DEFAULT_TASK_RESPONSIBLE;
   if (taskElements.taskPriority) taskElements.taskPriority.value = "medium";
   if (taskElements.taskDueDate) taskElements.taskDueDate.value = "";
   if (taskElements.taskReminderMode) taskElements.taskReminderMode.value = "dueDate";
@@ -1500,7 +1510,7 @@ async function refreshTasks() {
 
   const headers = [
    { label: "", className: "task-table__header--star" },
-   { label: "Proyecto" },
+   { label: "Cliente - Proyecto" },
    { label: "Título" },
    { label: "Descripción" },
    { label: "Responsable" },
@@ -1537,7 +1547,7 @@ async function refreshTasks() {
            projectId: "",
            title: "",
            description: "",
-           responsibleName: "",
+           responsibleName: DEFAULT_TASK_RESPONSIBLE,
            dueDate: "",
            reminderDate: "",
            priority: "medium",
