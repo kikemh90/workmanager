@@ -223,6 +223,19 @@ Acceptance:
 - the dashboard is informational only;
 - the dashboard does not replace the daily table.
 
+### 4.8.1 Data portability
+
+The user can export and import the local data set from the configuration area in order to move information between browser origins such as `localhost` and GitHub Pages.
+
+Acceptance:
+
+- the app can export all local data to a JSON file;
+- the export includes tasks, projects, diary data, status catalog, app settings, and relevant UI state;
+- the app can import a previously exported JSON file;
+- import replaces the current local data of the active browser origin only after explicit user confirmation;
+- after import, the app refreshes and the restored data becomes immediately available in the UI;
+- invalid JSON or invalid payload structure must be rejected with a visible error message.
+
 ### 4.9 Compact UX refinement and diary modal
 
 The application should keep the task table as the primary work surface while reducing wrapper chrome, redundant section headers, and vertical space wasted by visual framing.

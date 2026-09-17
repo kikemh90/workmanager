@@ -216,6 +216,21 @@ Done when:
 - starred tasks persist after refresh;
 - the `Mi día` filter returns only starred tasks and preserves the existing completed-task behavior.
 
+### Step 12 - Data export and import
+
+Deliverables:
+
+- configuration-area controls for exporting the local workspace as JSON;
+- file-based import flow with explicit replacement confirmation;
+- payload validation for required stores before replacing local data;
+- restoration of saved UI state when present in the imported payload.
+
+Done when:
+
+- a backup exported from `localhost` can be imported into GitHub Pages;
+- invalid files are rejected safely;
+- the UI refreshes immediately after a successful import.
+
 ## 4. Suggested agent mapping
 
 - Orchestrator: selects the next step and checks entry/exit criteria;

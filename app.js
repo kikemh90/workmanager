@@ -5,6 +5,7 @@ let taskElements = {};
 let filterElements = {};
 let statusElements = {};
 let journalElements = {};
+let backupElements = {};
 let cachedProjects = [];
 let cachedTaskStatuses = [];
 let cachedJournalClients = [];
@@ -89,19 +90,7 @@ function loadTaskViewState() {
   }
 
   try {
-    const parsed = JSON.parse(raw);
-    return {
-      view: normalizeTaskView(typeof parsed.view === "string" ? parsed.view : "all"),
-      projectId: typeof parsed.projectId === "string" ? parsed.projectId : "",
-      responsible: typeof parsed.responsible === "string" ? parsed.responsible : "",
-      priority: typeof parsed.priority === "string" ? parsed.priority : "",
-      statusId: typeof parsed.statusId === "string" ? parsed.statusId : "",
-      dueWindowDays: Number.isFinite(Number(parsed.dueWindowDays)) ? Math.max(1, Math.min(60, Number(parsed.dueWindowDays))) : 5,
-      showCompleted: parsed.showCompleted === true,
-      sortBy: normalizeTaskSortBy(typeof parsed.sortBy === "string" ? parsed.sortBy : "dueDate"),
-      sortDirection: normalizeSortDirection(typeof parsed.sortDirection === "string" ? parsed.sortDirection : "asc"),
-      editMode: parsed.editMode === true
-    };
+    return normalizeTaskViewState(JSON.parse(raw));
   } catch (_error) {
     return { ...taskViewState };
   }
@@ -118,11 +107,7 @@ function loadDiaryViewState() {
   }
 
   try {
-    const parsed = JSON.parse(raw);
-    return {
-      projectId: typeof parsed.projectId === "string" ? parsed.projectId : "",
-      searchText: typeof parsed.searchText === "string" ? parsed.searchText : ""
-    };
+    return normalizeDiaryViewState(JSON.parse(raw));
   } catch (_error) {
     return { ...diaryViewState };
   }
@@ -148,6 +133,30 @@ function normalizeSortDirection(value) {
   return value === "desc" ? "desc" : "asc";
 }
 
+function normalizeTaskViewState(value) {
+  const parsed = value && typeof value === "object" ? value : {};
+  return {
+    view: normalizeTaskView(typeof parsed.view === "string" ? parsed.view : "all"),
+    projectId: typeof parsed.projectId === "string" ? parsed.projectId : "",
+    responsible: typeof parsed.responsible === "string" ? parsed.responsible : "",
+    priority: typeof parsed.priority === "string" ? parsed.priority : "",
+    statusId: typeof parsed.statusId === "string" ? parsed.statusId : "",
+    dueWindowDays: Number.isFinite(Number(parsed.dueWindowDays)) ? Math.max(1, Math.min(60, Number(parsed.dueWindowDays))) : 5,
+    showCompleted: parsed.showCompleted === true,
+    sortBy: normalizeTaskSortBy(typeof parsed.sortBy === "string" ? parsed.sortBy : "dueDate"),
+    sortDirection: normalizeSortDirection(typeof parsed.sortDirection === "string" ? parsed.sortDirection : "asc"),
+    editMode: parsed.editMode === true
+  };
+}
+
+function normalizeDiaryViewState(value) {
+  const parsed = value && typeof value === "object" ? value : {};
+  return {
+    projectId: typeof parsed.projectId === "string" ? parsed.projectId : "",
+    searchText: typeof parsed.searchText === "string" ? parsed.searchText : ""
+  };
+}
+
 function loadAppViewState() {
   const raw = localStorage.getItem(APP_VIEW_STATE_KEY);
   if (!raw) {
@@ -155,10 +164,7 @@ function loadAppViewState() {
   }
 
   try {
-    const parsed = JSON.parse(raw);
-    return {
-      view: normalizeAppView(typeof parsed.view === "string" ? parsed.view : "daily")
-    };
+    return normalizeAppViewState(JSON.parse(raw));
   } catch (_error) {
     return { view: "daily" };
   }
@@ -166,6 +172,48 @@ function loadAppViewState() {
 
 function saveAppViewState() {
   localStorage.setItem(APP_VIEW_STATE_KEY, JSON.stringify(appViewState));
+}
+
+function normalizeAppViewState(value) {
+  const parsed = value && typeof value === "object" ? value : {};
+  return {
+    view: normalizeAppView(typeof parsed.view === "string" ? parsed.view : "daily")
+  };
+}
+
+function buildUiStateSnapshot() {
+  return {
+    appViewState: { ...appViewState },
+    taskViewState: { ...taskViewState },
+    diaryViewState: { ...diaryViewState }
+  };
+}
+
+function applyImportedUiState(uiState) {
+  const source = uiState && typeof uiState === "object" ? uiState : {};
+  appViewState = source.appViewState ? normalizeAppViewState(source.appViewState) : { ...appViewState };
+  taskViewState = source.taskViewState ? normalizeTaskViewState(source.taskViewState) : { ...taskViewState };
+  diaryViewState = source.diaryViewState ? normalizeDiaryViewState(source.diaryViewState) : { ...diaryViewState };
+  saveAppViewState();
+  saveTaskViewState();
+  saveDiaryViewState();
+}
+
+function getBackupFileName() {
+  const timestamp = new Date().toISOString().replaceAll(":", "-").replaceAll(".", "-");
+  return `workmanager-backup-${timestamp}.json`;
+}
+
+function triggerJsonDownload(fileName, payload) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = fileName;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
 }
 
 function getViewFromHash() {
@@ -237,6 +285,31 @@ async function applyAppView(view) {
 
 async function routeAppViewFromHash() {
   await applyAppView(getViewFromHash());
+}
+
+async function exportWorkspaceBackup() {
+  const payload = await window.WorkManagerDB.exportBackup();
+  payload.uiState = buildUiStateSnapshot();
+  triggerJsonDownload(getBackupFileName(), payload);
+}
+
+async function importWorkspaceBackupFromText(rawText) {
+  let parsed;
+  try {
+    parsed = JSON.parse(rawText);
+  } catch (error) {
+    throw new Error("El archivo no contiene un JSON valido");
+  }
+
+  const normalized = await window.WorkManagerDB.importBackup(parsed);
+  applyImportedUiState(normalized.uiState);
+  history.replaceState(null, "", `#/${appViewState.view}`);
+  syncAppView();
+  await refreshWorkspaceData();
+  clearProjectForm();
+  clearTaskForm();
+  clearStatusForm();
+  focusRequestedEntityForm();
 }
 
 function syncTaskViewButtons() {
@@ -1820,6 +1893,12 @@ function wireActions() {
     statusList: document.getElementById("status-list")
   };
 
+  backupElements = {
+    exportButton: document.getElementById("export-data-button"),
+    importButton: document.getElementById("import-data-button"),
+    importFile: document.getElementById("import-data-file")
+  };
+
   if (filterElements.project) {
     filterElements.project.addEventListener("change", async () => {
       taskViewState.projectId = filterElements.project.value;
@@ -1904,6 +1983,48 @@ function wireActions() {
   if (statusElements.cancelButton) {
     statusElements.cancelButton.addEventListener("click", () => {
       clearStatusForm();
+    });
+  }
+
+  if (backupElements.exportButton) {
+    backupElements.exportButton.addEventListener("click", async () => {
+      try {
+        await exportWorkspaceBackup();
+        setStatus("Copia JSON exportada");
+      } catch (error) {
+        setStatus("No se pudo exportar la copia");
+        console.error(`${appName}: backup export failed`, error);
+      }
+    });
+  }
+
+  if (backupElements.importButton && backupElements.importFile) {
+    backupElements.importButton.addEventListener("click", () => {
+      backupElements.importFile.value = "";
+      backupElements.importFile.click();
+    });
+
+    backupElements.importFile.addEventListener("change", async () => {
+      const file = backupElements.importFile.files && backupElements.importFile.files[0] ? backupElements.importFile.files[0] : null;
+      backupElements.importFile.value = "";
+      if (!file) {
+        return;
+      }
+
+      const confirmed = window.confirm("La importación reemplazará todos los datos locales actuales de esta URL. ¿Deseas continuar?");
+      if (!confirmed) {
+        setStatus("Importación cancelada");
+        return;
+      }
+
+      try {
+        const rawText = await file.text();
+        await importWorkspaceBackupFromText(rawText);
+        setStatus("Datos importados correctamente");
+      } catch (error) {
+        setStatus(error instanceof Error ? error.message : "No se pudo importar la copia");
+        console.error(`${appName}: backup import failed`, error);
+      }
     });
   }
 

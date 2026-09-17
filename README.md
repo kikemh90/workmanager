@@ -25,6 +25,7 @@ Estado del producto:
 - marcador visual de "Mi dia" con estrella clickable por tarea.
 - filtro rapido "Mi dia" para mostrar solo tareas destacadas con estrella.
 - ordenacion visual priorizando automaticamente arriba las tareas marcadas con estrella.
+- exportacion e importacion JSON para migrar o respaldar los datos locales entre origenes del navegador.
 
 ## Objetivo de producto
 
@@ -47,6 +48,7 @@ La aplicacion debe permitir:
 - disponer de un dashboard compacto con KPIs.
 - visualizar las tareas diarias en una tabla tipo Excel.
 - destacar tareas concretas como foco del dia sin alterar su prioridad funcional.
+- mover o restaurar los datos locales entre `localhost` y GitHub Pages mediante archivos JSON.
 
 ## Restricciones base
 
@@ -80,4 +82,5 @@ La aplicacion debe permitir:
 - **Gestor**: alta y mantenimiento de clientes y proyectos compartidos.
 - **Diario**: registro de conocimiento con selector de proyecto opcional, columna `Cliente - Proyecto`, filtro por proyecto y buscador en contenido, ademas de modal de alta rapida para nuevas entradas.
 - **Configuración**: mantenimiento del catalogo de estados de tarea.
+- **Configuración**: mantenimiento del catalogo de estados de tarea y herramientas de exportacion/importacion JSON.
 - **UX compacta**: banner simplificado, navegacion agrupada, eliminacion de cards redundantes y pantalla de tareas mas densa y legible.

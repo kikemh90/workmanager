@@ -7,7 +7,7 @@
     <title>WorkManager</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css?v=20260917-2" />
+    <link rel="stylesheet" href="./styles.css?v=20260917-3" />
   </head>
   <body>
     <div class="app-shell">
@@ -219,6 +219,23 @@
             <span class="status-pill">Estados y reglas</span>
           </div>
 
+          <section class="panel panel--nested" aria-labelledby="backup-tools-title">
+            <div class="panel__header panel__header--split">
+              <h3 id="backup-tools-title">Copia de seguridad y migración</h3>
+              <span class="status-pill">JSON local</span>
+            </div>
+            <div class="backup-panel">
+              <p class="backup-panel__note">
+                Exporta tus datos locales a un archivo JSON o importa una copia para reemplazar los datos actuales del navegador.
+              </p>
+              <div class="form-actions">
+                <button type="button" class="button button--primary" id="export-data-button">Exportar datos</button>
+                <button type="button" class="button button--secondary" id="import-data-button">Importar datos</button>
+                <input id="import-data-file" type="file" accept="application/json,.json" hidden />
+              </div>
+            </div>
+          </section>
+
           <section class="panel panel--nested" aria-labelledby="status-management-title">
             <div class="panel__header panel__header--split">
               <h3 id="status-management-title">Configuración de estados</h3>
@@ -294,7 +311,7 @@
       </div>
     </div>
 
-    <script src="./db.js?v=20260917-2" defer></script>
-    <script src="./app.js?v=20260917-2" defer></script>
+    <script src="./db.js?v=20260917-3" defer></script>
+    <script src="./app.js?v=20260917-3" defer></script>
   </body>
 </html>

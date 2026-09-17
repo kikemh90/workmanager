@@ -263,6 +263,8 @@ Backup rule:
 
 - data export/import should use a JSON payload containing tasks, projects, task statuses, journal clients, legacy journal projects if present, journal entries, and app settings;
 - import should validate the payload before replacing local data.
+- the backup payload should also carry local UI state for app view, task table view, and diary filters when available.
+- import should clear and replace all object-store data for the active origin in one write transaction.
 
 ## 6. UX refinement requirements
 

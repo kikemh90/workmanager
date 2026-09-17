@@ -37,6 +37,7 @@ const WorkManagerDB = (() => {
     }
   ];
   const PROJECT_CATALOG_MIGRATION_KEY = "migration-shared-project-catalog-v1";
+  const BACKUP_STORE_NAMES = ["projects", "tasks", "taskStatuses", "appSettings", "journalClients", "journalProjects", "journalEntries"];
 
   let dbPromise = null;
 
@@ -264,6 +265,61 @@ const WorkManagerDB = (() => {
     return result;
   }
 
+  function isPlainObject(value) {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+  }
+
+  function cloneRecords(records) {
+    return records.map((record) => ({ ...record }));
+  }
+
+  function readPayloadRecords(payload, key, { required = true } = {}) {
+    const value = payload[key];
+    if (value === undefined && !required) {
+      return [];
+    }
+
+    if (!Array.isArray(value)) {
+      throw new Error(`Backup payload field "${key}" must be an array`);
+    }
+
+    if (!value.every(isPlainObject)) {
+      throw new Error(`Backup payload field "${key}" must contain objects only`);
+    }
+
+    return cloneRecords(value);
+  }
+
+  function validateBackupPayload(payload) {
+    if (!isPlainObject(payload)) {
+      throw new Error("Backup payload must be a JSON object");
+    }
+
+    const data = isPlainObject(payload.data) ? payload.data : payload;
+    const taskStatuses = readPayloadRecords(data, "taskStatuses");
+    if (taskStatuses.length === 0) {
+      throw new Error("Backup payload must include at least one task status");
+    }
+
+    if (!taskStatuses.some((status) => status && status.mapsToComplete === true)) {
+      throw new Error("Backup payload must include one completed task status");
+    }
+
+    return {
+      metadata: isPlainObject(payload.metadata) ? { ...payload.metadata } : {},
+      uiState: isPlainObject(payload.uiState) ? { ...payload.uiState } : {},
+      data: {
+        projects: readPayloadRecords(data, "projects"),
+        tasks: readPayloadRecords(data, "tasks"),
+        taskStatuses,
+        appSettings: readPayloadRecords(data, "appSettings", { required: false }),
+        journalClients: readPayloadRecords(data, "journalClients", { required: false }),
+        journalProjects: readPayloadRecords(data, "journalProjects", { required: false }),
+        journalEntries: readPayloadRecords(data, "journalEntries", { required: false })
+      }
+    };
+  }
+
   return {
     init: getDatabase,
     createId,
@@ -282,6 +338,59 @@ const WorkManagerDB = (() => {
     },
     count(storeName) {
       return run(storeName, "readonly", (store) => requestToPromise(store.count()));
+    },
+    async exportBackup() {
+      const [projects, tasks, taskStatuses, appSettings, journalClients, journalProjects, journalEntries] = await Promise.all(
+        BACKUP_STORE_NAMES.map((storeName) => this.getAll(storeName))
+      );
+
+      return {
+        metadata: {
+          appName: "WorkManager",
+          formatVersion: 1,
+          exportedAt: nowIso()
+        },
+        data: {
+          projects: cloneRecords(projects),
+          tasks: cloneRecords(tasks),
+          taskStatuses: cloneRecords(taskStatuses),
+          appSettings: cloneRecords(appSettings),
+          journalClients: cloneRecords(journalClients),
+          journalProjects: cloneRecords(journalProjects),
+          journalEntries: cloneRecords(journalEntries)
+        }
+      };
+    },
+    validateBackupPayload,
+    async importBackup(payload) {
+      const normalized = validateBackupPayload(payload);
+      const database = await getDatabase();
+      const transaction = database.transaction(BACKUP_STORE_NAMES, "readwrite");
+
+      try {
+        for (const storeName of BACKUP_STORE_NAMES) {
+          transaction.objectStore(storeName).clear();
+        }
+
+        for (const storeName of BACKUP_STORE_NAMES) {
+          const store = transaction.objectStore(storeName);
+          const records = normalized.data[storeName] || [];
+          for (const record of records) {
+            store.put(record);
+          }
+        }
+      } catch (error) {
+        transaction.abort();
+        throw error;
+      }
+
+      await new Promise((resolve, reject) => {
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+        transaction.onabort = () => reject(transaction.error || new Error("Backup import aborted"));
+      });
+
+      return normalized;
     },
     async getSummary() {
       const [projects, tasks, taskStatuses] = await Promise.all([
