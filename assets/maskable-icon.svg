@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="WorkManager maskable icon">
+  <rect width="192" height="192" rx="40" fill="#1f6feb"/>
+  <rect x="28" y="28" width="136" height="136" rx="28" fill="#ffffff" opacity="0.08"/>
+  <path d="M52 56h88v16H52zM52 88h88v16H52zM52 120h56v16H52z" fill="#ffffff"/>
+  <circle cx="144" cy="128" r="20" fill="#ffffff" opacity="0.9"/>
+</svg>

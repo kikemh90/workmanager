@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1f6feb" />
+    <title>WorkManager</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css?v=20260917-2" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div class="app-header__brand">
+          <p class="eyebrow">WorkManager</p>
+        </div>
+        <div class="header-status">
+          <span id="pwa-status" class="status-pill">Cargando...</span>
+        </div>
+      </header>
+
+      <nav class="app-nav" aria-label="Áreas principales">
+        <div class="app-nav__group app-nav__group--main">
+          <button type="button" class="button button--secondary" data-app-view="dashboard">Dashboard</button>
+          <button type="button" class="button button--secondary" data-app-view="daily">Tareas</button>
+          <button type="button" class="button button--secondary" data-app-view="diary">Diario</button>
+        </div>
+        <div class="app-nav__group app-nav__group--secondary">
+          <button type="button" class="button button--secondary" data-app-view="gestor">Gestor</button>
+          <button type="button" class="button button--secondary" data-app-view="config">Configuración</button>
+        </div>
+      </nav>
+
+      <main class="app-main">
+        <section class="app-view" data-app-view="dashboard" aria-labelledby="dashboard-title">
+          <div class="app-view__meta">
+            <span class="status-pill" id="dashboard-summary">Cargando métricas...</span>
+          </div>
+
+          <div id="dashboard-kpis" class="dashboard-kpis" aria-live="polite"></div>
+
+          <div class="dashboard-breakdowns">
+            <section class="panel panel--nested" aria-labelledby="dashboard-projects-title">
+              <div class="panel__header">
+                <h3 id="dashboard-projects-title">Por proyecto</h3>
+              </div>
+              <div id="dashboard-projects" class="dashboard-list"></div>
+            </section>
+
+            <section class="panel panel--nested" aria-labelledby="dashboard-priorities-title">
+              <div class="panel__header">
+                <h3 id="dashboard-priorities-title">Por prioridad</h3>
+              </div>
+              <div id="dashboard-priorities" class="dashboard-list"></div>
+            </section>
+
+            <section class="panel panel--nested" aria-labelledby="dashboard-dates-title">
+              <div class="panel__header">
+                <h3 id="dashboard-dates-title">Por vencimiento</h3>
+              </div>
+              <div id="dashboard-dates" class="dashboard-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="app-view" data-app-view="daily" aria-labelledby="daily-title">
+          <div class="task-toolbar">
+            <div class="task-views" aria-label="Vistas rápidas de tareas">
+              <button type="button" class="button button--secondary" data-view="all" id="task-view-all">Todas</button>
+              <button type="button" class="button button--secondary" data-view="my-day" id="task-view-my-day">Mi día</button>
+              <button type="button" class="button button--secondary" data-view="today" id="task-view-today">Hoy</button>
+              <button type="button" class="button button--secondary" data-view="upcoming" id="task-view-upcoming">Próximas</button>
+              <button type="button" class="button button--secondary" data-view="overdue" id="task-view-overdue">Vencidas</button>
+            </div>
+
+            <div class="task-filters" aria-label="Filtros de tareas">
+              <label class="field">
+                <span>Proyecto</span>
+                <select id="task-filter-project"></select>
+              </label>
+
+              <label class="field">
+                <span>Responsable</span>
+                <input id="task-filter-responsible" type="text" maxlength="120" />
+              </label>
+
+              <label class="field">
+                <span>Prioridad</span>
+                <select id="task-filter-priority">
+                  <option value="">Todas</option>
+                  <option value="high">Alta</option>
+                  <option value="medium">Media</option>
+                  <option value="low">Baja</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Estado</span>
+                <select id="task-filter-status"></select>
+              </label>
+
+              <label class="field">
+                <span>Ventana próxima a vencer (días)</span>
+                <input id="task-filter-due-window" type="number" min="1" max="60" step="1" />
+              </label>
+
+              <div class="form-actions">
+                <button type="button" class="button button--secondary" id="clear-task-filters">Limpiar filtros</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="task-panel-actions">
+            <span class="status-pill" id="tasks-count">0 tareas</span>
+            <button type="button" class="button button--secondary button--compact" id="toggle-completed-button">Mostrar completadas</button>
+            <button type="button" class="button button--secondary button--compact" id="toggle-task-edit-button">Activar edición</button>
+            <button type="button" class="button button--secondary button--compact" id="refresh-button">Actualizar</button>
+          </div>
+          <div id="task-list" class="task-list" aria-live="polite"></div>
+        </section>
+
+        <section class="app-view" data-app-view="gestor" aria-labelledby="gestor-title">
+          <div class="app-view__meta">
+            <span class="status-pill" id="gestor-summary">0 clientes · 0 proyectos</span>
+          </div>
+
+          <div class="diary-grid diary-grid--manager">
+            <section class="panel panel--nested" aria-labelledby="journal-clients-title">
+              <div class="panel__header">
+                <h3 id="journal-clients-title">Clientes</h3>
+                <span class="status-pill" id="journal-clients-count">0 clientes</span>
+              </div>
+
+              <form id="journal-client-form" class="compact-form">
+                <input type="hidden" id="journal-client-id" />
+                <label class="field">
+                  <span>Nombre del cliente</span>
+                  <input id="journal-client-name" type="text" maxlength="120" required />
+                </label>
+                <div class="form-actions">
+                  <button type="submit" class="button button--primary">Guardar cliente</button>
+                  <button type="button" class="button button--secondary" id="journal-client-cancel">Cancelar</button>
+                </div>
+              </form>
+
+              <div id="journal-client-list" class="journal-list" aria-live="polite"></div>
+            </section>
+
+            <section class="panel panel--nested" aria-labelledby="manager-projects-title">
+              <div class="panel__header">
+                <h3 id="manager-projects-title">Proyectos</h3>
+                <span class="status-pill" id="journal-projects-count">0 proyectos</span>
+              </div>
+
+              <form id="project-form" class="compact-form">
+                <input type="hidden" id="project-id" />
+                <div class="form-grid">
+                  <label class="field">
+                    <span>Cliente</span>
+                    <select id="project-client"></select>
+                  </label>
+                  <label class="field">
+                    <span>Nombre del proyecto</span>
+                    <input id="project-name" type="text" maxlength="120" required />
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="button button--primary" id="save-project-button">Guardar proyecto</button>
+                  <button type="button" class="button button--secondary" id="cancel-project-button">Cancelar</button>
+                </div>
+              </form>
+
+              <div id="project-list" class="journal-list" aria-live="polite"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="app-view" data-app-view="diary" aria-labelledby="diary-title">
+          <div class="task-toolbar task-toolbar--diary">
+            <div class="task-filters" aria-label="Filtros del diario">
+              <label class="field">
+                <span>Proyecto</span>
+                <select id="journal-filter-project"></select>
+              </label>
+
+              <label class="field diary-search-field">
+                <span>Buscar en contenido</span>
+                <input id="journal-filter-search" type="text" maxlength="200" placeholder="Texto libre" />
+              </label>
+
+              <div class="form-actions">
+                <button type="button" class="button button--secondary" id="clear-journal-filters">Limpiar filtros</button>
+              </div>
+            </div>
+
+            <div class="form-actions form-actions--align-right">
+              <button type="button" class="button button--primary" id="new-journal-button">Nuevo registro</button>
+            </div>
+          </div>
+
+          <div class="app-view__meta">
+            <span class="status-pill" id="diary-summary">0 entradas</span>
+          </div>
+
+          <div class="diary-grid diary-grid--entries">
+            <section class="panel panel--nested panel--full-width" aria-labelledby="journal-entries-title">
+              <div class="panel__header panel__header--split">
+                <h3 id="journal-entries-title">Entradas del diario</h3>
+                <span class="status-pill" id="journal-entries-count">0 entradas</span>
+              </div>
+              <div id="journal-entry-list" class="journal-list" aria-live="polite"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="app-view" data-app-view="config" aria-labelledby="status-settings-title">
+          <div class="app-view__meta">
+            <span class="status-pill">Estados y reglas</span>
+          </div>
+
+          <section class="panel panel--nested" aria-labelledby="status-management-title">
+            <div class="panel__header panel__header--split">
+              <h3 id="status-management-title">Configuración de estados</h3>
+              <span class="status-pill" id="status-count">0 estados</span>
+            </div>
+
+            <form id="status-form" class="status-form">
+              <input type="hidden" id="status-id" />
+
+              <div class="form-grid">
+                <label class="field">
+                  <span>Texto visible</span>
+                  <input id="status-label" type="text" maxlength="80" required />
+                </label>
+
+                <label class="field">
+                  <span>Orden</span>
+                  <input id="status-order" type="number" min="1" step="1" required />
+                </label>
+
+                <label class="field field--inline">
+                  <input id="status-active" type="checkbox" checked />
+                  <span>Activo</span>
+                </label>
+
+                <label class="field field--inline">
+                  <input id="status-complete" type="checkbox" />
+                  <span>Marca como completado</span>
+                </label>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="button button--primary" id="save-status-button">Guardar estado</button>
+                <button type="button" class="button button--secondary" id="cancel-status-button">Cancelar edición</button>
+              </div>
+            </form>
+
+            <div id="status-list" class="status-list" aria-live="polite"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <div id="journal-entry-modal" class="modal" aria-hidden="true" hidden>
+      <div class="modal__backdrop" data-close-modal="true"></div>
+      <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="journal-entry-modal-title">
+        <div class="modal__header">
+          <h3 id="journal-entry-modal-title">Nuevo registro</h3>
+          <button type="button" class="button button--secondary button--compact" data-close-modal="true" aria-label="Cerrar ventana">✕</button>
+        </div>
+
+        <form id="journal-entry-form" class="compact-form">
+          <input type="hidden" id="journal-entry-id" />
+          <div class="form-grid">
+            <label class="field">
+              <span>Proyecto</span>
+              <select id="journal-entry-project"></select>
+            </label>
+            <label class="field">
+              <span>Título (opcional)</span>
+              <input id="journal-entry-title" type="text" maxlength="160" />
+            </label>
+          </div>
+          <label class="field">
+            <span>Contenido</span>
+            <textarea id="journal-entry-content" rows="8" maxlength="4000" required></textarea>
+          </label>
+          <div class="form-actions">
+            <button type="submit" class="button button--primary">Guardar entrada</button>
+            <button type="button" class="button button--secondary" id="journal-entry-cancel">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="./db.js?v=20260917-2" defer></script>
+    <script src="./app.js?v=20260917-2" defer></script>
+  </body>
+</html>
