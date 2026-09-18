@@ -439,15 +439,11 @@ h2 {
 }
 
 .task-table__row--danger {
-  background: #fff5f5;
+  background: #fde7e4 !important;
 }
 
 .task-table__row--warning {
-  background: #fff8ed;
-}
-
-.task-table__row--success {
-  background: #f4fbf7;
+  background: #fff0c7 !important;
 }
 
 .task-table__row--neutral {
@@ -587,17 +583,12 @@ h2 {
 }
 
 .task-table__input--due-danger {
-  color: #b42318;
+  color: #9f1d1d;
   font-weight: 700;
 }
 
 .task-table__input--due-warning {
-  color: #b54708;
-  font-weight: 700;
-}
-
-.task-table__input--due-success {
-  color: #027a48;
+  color: #8a5b00;
   font-weight: 700;
 }
 
@@ -607,17 +598,12 @@ h2 {
 }
 
 .task-table__row--danger [data-task-field="dueDate"] {
-  color: #b42318;
+  color: #9f1d1d;
   font-weight: 700;
 }
 
 .task-table__row--warning [data-task-field="dueDate"] {
-  color: #b54708;
-  font-weight: 700;
-}
-
-.task-table__row--success [data-task-field="dueDate"] {
-  color: #027a48;
+  color: #8a5b00;
   font-weight: 700;
 }
 
@@ -628,16 +614,16 @@ h2 {
 }
 
 .task-table__select--priority-high {
-  background: rgba(255, 241, 240, 0.6);
-  border-color: #fda29b;
-  color: #b42318;
+  background: rgba(253, 231, 228, 0.65);
+  border-color: #f4a6a0;
+  color: #9f1d1d;
   font-weight: 700;
 }
 
 .task-table__select--priority-medium {
-  background: rgba(255, 248, 230, 0.6);
-  border-color: #f6c453;
-  color: #b54708;
+  background: rgba(255, 240, 199, 0.7);
+  border-color: #e5ab2b;
+  color: #8a5b00;
   font-weight: 700;
 }
 

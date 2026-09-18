@@ -191,8 +191,10 @@ Acceptance:
 - the reminder date can be manually overridden per task without losing local persistence;
 - completed tasks are rendered in a subdued gray state when they are marked complete.
 - the user can sort the table directly from column headers, at least by due date, priority, and status.
+- the user can also sort by the `Cliente - Proyecto` column.
 - priority remains color-coded in the task table using text color, without extra icons in the column.
 - the due-date column keeps explicit urgency colors for overdue, near-due, and normal items.
+- the task table no longer uses a green success row state; only neutral, amber, red, and completed gray row treatments remain.
 - each task row exposes a clickable star at the left edge to mark the task as part of `Mi día`;
 - the star is gray by default and yellow when active;
 - the star is independent from the standard priority field and does not replace it.
@@ -213,7 +215,7 @@ Due date visual rule:
 
 - overdue tasks must be red;
 - tasks close to due date must be amber;
-- tasks not near their due date must be green or neutral;
+- tasks not near their due date must remain neutral;
 - the visual treatment should make urgency obvious at a glance.
 
 ### 4.8 Daily dashboard

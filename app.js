@@ -28,7 +28,7 @@ const APP_VIEW_STATE_KEY = "workmanager-app-view-state";
 const DIARY_VIEW_STATE_KEY = "workmanager-diary-view-state";
 const APP_VIEWS = ["dashboard", "daily", "gestor", "diary", "config"];
 const TASK_VIEWS = ["all", "my-day", "today", "upcoming", "overdue"];
-const TASK_SORT_FIELDS = ["dueDate", "priority", "status"];
+const TASK_SORT_FIELDS = ["project", "dueDate", "priority", "status"];
 const DEFAULT_REMINDER_DAYS = 5;
 const DEFAULT_TASK_RESPONSIBLE = "Kike";
 let diaryViewState = {
@@ -654,7 +654,7 @@ function getTaskUrgency(task) {
     return "warning";
   }
 
-  return "success";
+  return "neutral";
 }
 
 function getTaskFormProjects(selectedProjectId) {
@@ -734,7 +734,9 @@ function sortTasks(tasks) {
 
     let comparison = 0;
 
-    if (taskViewState.sortBy === "priority") {
+    if (taskViewState.sortBy === "project") {
+      comparison = getProjectClientLabel(left.projectId || "").localeCompare(getProjectClientLabel(right.projectId || ""), "es");
+    } else if (taskViewState.sortBy === "priority") {
       comparison = getPriorityWeight(left.priority) - getPriorityWeight(right.priority);
     } else if (taskViewState.sortBy === "status") {
       comparison = getStatusSortWeight(left.statusId) - getStatusSortWeight(right.statusId);
@@ -767,7 +769,7 @@ function populateTaskFilterOptions() {
   if (filterElements.project) {
     const projectOptions = ["<option value=\"\">Todos</option>"].concat(
       cachedProjects.map((project) => {
-        const label = project.isActive ? project.name : `${project.name} (Archivado)`;
+        const label = getTaskProjectOptionLabel(project);
         return `<option value="${escapeHtml(project.id)}">${escapeHtml(label)}</option>`;
       })
     );
@@ -1510,7 +1512,7 @@ async function refreshTasks() {
 
   const headers = [
    { label: "", className: "task-table__header--star" },
-   { label: "Cliente - Proyecto" },
+   { label: "Cliente - Proyecto", sortBy: "project" },
    { label: "Título" },
    { label: "Descripción" },
    { label: "Responsable" },
