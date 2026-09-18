@@ -39,6 +39,7 @@ let appViewState = {
   view: "daily"
 };
 let pendingEntityFocus = "";
+let activeTaskDatePicker = null;
 
 function setStatus(message) {
   const status = document.getElementById("pwa-status");
@@ -558,6 +559,234 @@ function getCalculatedReminderIso(dueDate) {
   const due = new Date(year, month - 1, day);
   due.setDate(due.getDate() - DEFAULT_REMINDER_DAYS);
   return formatLocalIsoDate(due);
+}
+
+function getMondayWeekdayIndex(date) {
+  return (date.getDay() + 6) % 7;
+}
+
+function toLocalDateFromIso(isoDate) {
+  if (!isoDate) {
+    return null;
+  }
+
+  const parsed = parseIsoDateValue(isoDate);
+  if (!parsed) {
+    return null;
+  }
+
+  const [year, month, day] = parsed.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function formatCalendarMonthLabel(date) {
+  return date.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+}
+
+function clearTaskDatePicker() {
+  if (!activeTaskDatePicker) {
+    return;
+  }
+
+  document.removeEventListener("pointerdown", activeTaskDatePicker.handlePointerDown, true);
+  document.removeEventListener("keydown", activeTaskDatePicker.handleKeyDown, true);
+  window.removeEventListener("resize", activeTaskDatePicker.handleWindowChange);
+  window.removeEventListener("scroll", activeTaskDatePicker.handleWindowChange, true);
+  activeTaskDatePicker.popover.remove();
+  activeTaskDatePicker = null;
+}
+
+function positionTaskDatePicker() {
+  if (!activeTaskDatePicker) {
+    return;
+  }
+
+  const { popover, anchorButton } = activeTaskDatePicker;
+  const rect = anchorButton.getBoundingClientRect();
+  const offset = 8;
+  const width = Math.min(308, window.innerWidth - 16);
+  const height = popover.offsetHeight || 320;
+  let left = rect.left;
+  let top = rect.bottom + offset;
+
+  if (left + width > window.innerWidth - 8) {
+    left = window.innerWidth - width - 8;
+  }
+
+  if (left < 8) {
+    left = 8;
+  }
+
+  if (top + height > window.innerHeight - 8) {
+    top = rect.top - height - offset;
+  }
+
+  if (top < 8) {
+    top = 8;
+  }
+
+  popover.style.left = `${left}px`;
+  popover.style.top = `${top}px`;
+  popover.style.width = `${width}px`;
+}
+
+function renderTaskDatePicker() {
+  if (!activeTaskDatePicker) {
+    return;
+  }
+
+  const { popover, month, selectedIso } = activeTaskDatePicker;
+  const year = month.getFullYear();
+  const monthIndex = month.getMonth();
+  const firstOfMonth = new Date(year, monthIndex, 1);
+  const startOffset = getMondayWeekdayIndex(firstOfMonth);
+  const gridStart = new Date(year, monthIndex, 1 - startOffset);
+  const todayIso = formatLocalIsoDate(new Date());
+  const weekdayLabels = ["L", "M", "X", "J", "V", "S", "D"];
+  const cells = [];
+
+  for (let index = 0; index < 42; index += 1) {
+    const cellDate = new Date(gridStart);
+    cellDate.setDate(gridStart.getDate() + index);
+    const cellIso = formatLocalIsoDate(cellDate);
+    const isCurrentMonth = cellDate.getMonth() === monthIndex;
+    const isSelected = selectedIso === cellIso;
+    const isToday = todayIso === cellIso;
+    const cellClasses = [
+      "task-date-picker__day",
+      isCurrentMonth ? "task-date-picker__day--current" : "task-date-picker__day--adjacent",
+      isSelected ? "task-date-picker__day--selected" : "",
+      isToday ? "task-date-picker__day--today" : ""
+    ].filter(Boolean).join(" ");
+
+    cells.push(`
+      <button type="button" class="${cellClasses}" data-task-date-picker-day="${escapeHtml(cellIso)}">
+        <span class="task-date-picker__day-number">${cellDate.getDate()}</span>
+      </button>
+    `);
+  }
+
+  popover.innerHTML = `
+    <div class="task-date-picker__header">
+      <button type="button" class="button button--secondary button--compact task-date-picker__nav" data-task-date-picker-action="prev-month" aria-label="Mes anterior">‹</button>
+      <div class="task-date-picker__title">${escapeHtml(formatCalendarMonthLabel(month))}</div>
+      <button type="button" class="button button--secondary button--compact task-date-picker__nav" data-task-date-picker-action="next-month" aria-label="Mes siguiente">›</button>
+    </div>
+    <div class="task-date-picker__weekdays" aria-hidden="true">
+      ${weekdayLabels.map((label) => `<span>${label}</span>`).join("")}
+    </div>
+    <div class="task-date-picker__grid">
+      ${cells.join("")}
+    </div>
+  `;
+
+  positionTaskDatePicker();
+}
+
+function applyTaskDatePickerSelection(isoDate) {
+  if (!activeTaskDatePicker) {
+    return;
+  }
+
+  const { row, fieldName } = activeTaskDatePicker;
+  const control = getTaskRowField(row, fieldName);
+  if (!control) {
+    clearTaskDatePicker();
+    return;
+  }
+
+  control.value = isoDate ? formatDateLabel(isoDate) : "";
+  control.dispatchEvent(new Event("input", { bubbles: true }));
+  control.dispatchEvent(new Event("change", { bubbles: true }));
+
+  if (fieldName === "dueDate") {
+    updateTaskReminderPreview(row);
+  } else if (fieldName === "reminderDate") {
+    syncTaskReminderMode(row);
+  }
+
+  updateTaskRowSelectClasses(row);
+  clearTaskDatePicker();
+}
+
+function openTaskDatePicker(row, fieldName, anchorButton) {
+  const control = getTaskRowField(row, fieldName);
+  if (!control || !anchorButton) {
+    return;
+  }
+
+  clearTaskDatePicker();
+
+  const currentIso = parseUserDateValue(control.value) || formatLocalIsoDate(new Date());
+  const baseDate = toLocalDateFromIso(currentIso) || new Date();
+  const popover = document.createElement("div");
+  popover.className = "task-date-picker";
+  popover.setAttribute("role", "dialog");
+  popover.setAttribute("aria-label", "Selector de fecha");
+
+  const handlePointerDown = (event) => {
+    if (!activeTaskDatePicker) {
+      return;
+    }
+
+    if (popover.contains(event.target) || anchorButton.contains(event.target)) {
+      return;
+    }
+
+    clearTaskDatePicker();
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape") {
+      clearTaskDatePicker();
+    }
+  };
+
+  const handleWindowChange = () => {
+    if (activeTaskDatePicker) {
+      positionTaskDatePicker();
+    }
+  };
+
+  activeTaskDatePicker = {
+    row,
+    fieldName,
+    anchorButton,
+    popover,
+    month: new Date(baseDate.getFullYear(), baseDate.getMonth(), 1),
+    selectedIso: currentIso,
+    handlePointerDown,
+    handleKeyDown,
+    handleWindowChange
+  };
+
+  document.body.appendChild(popover);
+  renderTaskDatePicker();
+
+  popover.addEventListener("click", (event) => {
+    const actionButton = event.target.closest("button[data-task-date-picker-action]");
+    if (actionButton) {
+      const action = actionButton.getAttribute("data-task-date-picker-action");
+      if (action === "prev-month") {
+        activeTaskDatePicker.month = new Date(activeTaskDatePicker.month.getFullYear(), activeTaskDatePicker.month.getMonth() - 1, 1);
+        renderTaskDatePicker();
+      } else if (action === "next-month") {
+        activeTaskDatePicker.month = new Date(activeTaskDatePicker.month.getFullYear(), activeTaskDatePicker.month.getMonth() + 1, 1);
+        renderTaskDatePicker();
+      }
+      return;
+    }
+
+    const dayButton = event.target.closest("button[data-task-date-picker-day]");
+    if (dayButton) {
+      applyTaskDatePickerSelection(dayButton.getAttribute("data-task-date-picker-day"));
+    }
+  });
+
+  document.addEventListener("pointerdown", handlePointerDown, true);
+  document.addEventListener("keydown", handleKeyDown, true);
+  window.addEventListener("resize", handleWindowChange);
+  window.addEventListener("scroll", handleWindowChange, true);
 }
 
 function getTaskReminderLabel(task) {
@@ -1497,6 +1726,7 @@ async function refreshProjects() {
 }
 
 async function refreshTasks() {
+  clearTaskDatePicker();
   const list = document.getElementById("task-list");
   if (!list) {
     return;
@@ -2195,13 +2425,9 @@ function wireActions() {
       if (datePickerButton) {
         const row = getTaskTableRowElement(datePickerButton);
         const control = datePickerButton.closest(".task-table__date-control");
-        const picker = control ? control.querySelector("[data-task-picker-field]") : null;
-        if (row && picker) {
-          if (typeof picker.showPicker === "function") {
-            picker.showPicker();
-          } else {
-            picker.click();
-          }
+        const fieldName = control && control.querySelector("[data-task-field]") ? control.querySelector("[data-task-field]").getAttribute("data-task-field") : "";
+        if (row && fieldName) {
+          openTaskDatePicker(row, fieldName, datePickerButton);
         }
         return;
       }

@@ -60,7 +60,7 @@ Implementation rules:
 - the daily view should expose the quick views `all`, `my-day`, `today`, `upcoming`, and `overdue`;
 - the task sorting pipeline should always apply the starred-state boost first and then the currently selected sort field;
 - the daily view should expose show/hide completed and sortable headers for due date, priority, status, and `Cliente - Proyecto`;
-- the daily view should use native date inputs when edit mode is active and formatted labels in read mode;
+- the daily view should use an in-table date picker with Monday as the first day of the week when edit mode is active, while still rendering formatted labels in read mode;
 - the gestor workspace should expose CRUD for clients and the shared project catalog;
 - the diary workspace should expose CRUD for entries plus project filter and content search.
 

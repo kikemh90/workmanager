@@ -131,7 +131,7 @@ Acceptance:
 - priority is set on creation or defaults to a defined value;
 - task appears in the active task list after saving;
 - the daily table includes a blank creation row at the top;
-- due date and reminder date use the native calendar picker while the table is in edit mode.
+- due date and reminder date use an in-table calendar picker while the table is in edit mode.
 
 ### 4.3 Editing a task
 
@@ -195,6 +195,7 @@ Acceptance:
 - priority remains color-coded in the task table using text color, without extra icons in the column.
 - the due-date column keeps explicit urgency colors for overdue, near-due, and normal items.
 - the task table no longer uses a green success row state; only neutral, amber, red, and completed gray row treatments remain.
+- the in-table date picker should open with Monday as the first day of the week.
 - each task row exposes a clickable star at the left edge to mark the task as part of `Mi día`;
 - the star is gray by default and yellow when active;
 - the star is independent from the standard priority field and does not replace it.

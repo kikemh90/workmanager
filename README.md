@@ -80,7 +80,7 @@ La aplicacion debe permitir:
 ## Estructura funcional actual
 
 - **Dashboard**: KPIs compactos por prioridad, proyecto y vencimiento.
-- **Tareas**: tabla principal tipo Excel con filtros, ordenacion por cabeceras incluyendo `Cliente - Proyecto`, modo edicion global, columna `Cliente - Proyecto` coherente con Diario, responsable por defecto `Kike`, colores de prioridad y urgencia de vencimiento con warning amber/red, ocultacion por defecto de tareas completadas y marcador de estrella para `Mi dia`.
+- **Tareas**: tabla principal tipo Excel con filtros, ordenacion por cabeceras incluyendo `Cliente - Proyecto`, modo edicion global, columna `Cliente - Proyecto` coherente con Diario, responsable por defecto `Kike`, colores de prioridad y urgencia de vencimiento con warning amber/red, calendario de fecha con inicio en lunes, ocultacion por defecto de tareas completadas y marcador de estrella para `Mi dia`.
 - **Gestor**: alta y mantenimiento de clientes y proyectos compartidos.
 - **Diario**: registro de conocimiento con selector de proyecto opcional, columna `Cliente - Proyecto`, filtro por proyecto y buscador en contenido, ademas de modal de alta rapida para nuevas entradas.
 - **Configuración**: mantenimiento del catalogo de estados de tarea.
